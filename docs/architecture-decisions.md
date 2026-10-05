@@ -199,6 +199,13 @@ would risk visitors getting a stale `index.html` that references assets from
 a previous deploy. Differentiating by file type gets both aggressive caching
 and freshness, at the cost of one extra piece of deployment logic (setting
 metadata per file group during upload instead of a single blanket setting).
+Because `index.html` already revalidates on every request, this strategy
+also means **no routine CloudFront invalidation is required** — content
+updates are picked up automatically once a new `index.html` is uploaded. A
+one-off invalidation remains a possible exceptional measure in the future,
+but it isn't part of normal operation and would require granting
+`cloudfront:CreateInvalidation` to the deployment role first (not currently
+granted — see decision 12).
 
 ## 12. Dedicated least-privilege IAM role for deployment
 
@@ -207,10 +214,12 @@ metadata per file group during upload instead of a single blanket setting).
 deployment operations actually require.
 
 **Decision**: A dedicated IAM role, scoped to only the actions needed to
-deploy (S3 object operations on the specific bucket, CloudFront invalidation
-on the specific distribution, and the one-time resource-creation actions
-needed during initial setup), assumed through a separate AWS CLI profile
-rather than used directly from the broad-access identity.
+deploy (S3 object operations on the specific bucket and the one-time
+resource-creation actions needed during initial setup), assumed through a
+separate AWS CLI profile rather than used directly from the broad-access
+identity. `cloudfront:CreateInvalidation` was deliberately **not** granted —
+the first deployment didn't need it (see decision 11) and the policy stays
+scoped to what was actually used.
 
 **Alternative**: Keep using the administrator identity directly for
 deployments.

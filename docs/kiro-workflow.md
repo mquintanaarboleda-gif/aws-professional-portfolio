@@ -65,16 +65,19 @@ output rather than taking "it built" on faith.
 
 ## Deployment
 
-The deployment checklist (`AWS_DEPLOYMENT.md`, and this document's companion
-[deployment.md](./deployment.md)) was prepared by Kiro as a precise,
-placeholder-based sequence of steps. Every decision with real consequences —
-choosing AWS CLI over the Console, approving the cost estimate, approving
-each phase of the IAM/ACM/CloudFront/S3/Route 53 setup individually,
-registering the domain, and the final go/no-go for production — was an
+Kiro first prepared a placeholder-based deployment checklist, before any AWS
+resource existed. That checklist was then actually executed, step by step,
+against the project owner's AWS account; `AWS_DEPLOYMENT.md` and this
+document's companion [deployment.md](./deployment.md) now describe that
+real, completed deployment rather than the original pending plan. Every
+decision with real consequences — choosing AWS CLI over the Console,
+approving the IAM role design, approving each phase of the
+ACM/CloudFront/S3/Route 53 setup individually, registering the domain with
+real registrant information, and the final go/no-go for production — was an
 explicit approval gate decided by the project owner, not an outcome Kiro
 arrived at on its own. Kiro's role at this stage was to execute the agreed
-steps, verify their result, and stop at each gate until the next approval
-was given.
+steps, verify their result against the live AWS account, and stop at each
+gate until the next approval was given.
 
 ## Why this matters for this portfolio
 

@@ -1,85 +1,85 @@
-# AWS Deployment — Checklist de preparación
+# AWS Deployment
 
-> Este documento es preparación de despliegue. **No describe un deployment ya ejecutado.**
-> No se crearon recursos AWS, no se ejecutó AWS CLI y no se hizo deploy al redactarlo.
-> El primer deployment será **manual, mediante AWS Console**, con fines de aprendizaje.
-> AWS CLI puede usarse en deployments *posteriores*, no en el primero.
-> Infrastructure as Code (Terraform/CDK/CloudFormation) queda fuera de esta fase; se evaluará después.
+## Estado
 
-## 1. Build de producción
+**PRODUCTION DEPLOYED**
 
-Comandos, ejecutados desde la raíz del repositorio:
+Live URL: **https://miltonquintana.com**
 
-```bash
-npm run type-check   # tsc -b — sin errores de tipos, strict mode activo
-npm run lint          # oxlint — sin hallazgos
-npm run build         # tsc -b && vite build — genera dist/
-```
+Este documento describe el deployment de producción REAL ya ejecutado — no es un checklist previo a un deployment pendiente. Ningún paso queda abierto; cada sección refleja lo que realmente se configuró y se validó.
 
-Resultado verificado en esta sesión (build real, no estimado):
-
-```
-dist/index.html                   1.55 kB │ gzip:  0.71 kB
-dist/assets/index-CgF0QByM.css   10.13 kB │ gzip:  2.23 kB
-dist/assets/index-DkO7tM9C.js   243.79 kB │ gzip: 76.11 kB
-```
-
-Los nombres de archivo con hash (`index-CgF0QByM.css`, `index-DkO7tM9C.js`) cambian en cada build cuando cambia el contenido; no son valores fijos para citar en configuración, son solo evidencia de que el build genera archivos con hash de contenido.
-
-## 2. Contenido de `dist/`
-
-Árbol real generado por `npm run build` (verificado en esta sesión):
-
-```
-dist/
-├── index.html              (sin hash en el nombre)
-├── favicon.svg              (sin hash en el nombre)
-└── assets/
-    ├── index-<hash>.css    (hash de contenido en el nombre)
-    └── index-<hash>.js     (hash de contenido en el nombre)
-```
-
-Esta distinción (con hash vs. sin hash) es la base de la estrategia de caché de la sección 6: todo lo que vive bajo `assets/` lleva hash de Vite y es inmutable; `index.html` y `favicon.svg` no llevan hash y deben revalidarse en cada visita.
-
-Es la salida completa; no hay backend, no hay API routes, no hay archivos de configuración de servidor que subir — es contenido estático listo para un bucket S3, consistente con Requirement 17.2/17.3 (HTML/CSS/JS listos para hosting, sin transformación adicional).
-
-## 3. Arquitectura AWS objetivo (aprobada, no desplegada)
+## Arquitectura
 
 ```
 Usuario
-  │  HTTPS request (https://<dominio-pendiente>)
+  │  HTTPS request
   ▼
-Route 53  (registro Alias → distribución CloudFront)
+Route 53  (registros Alias: dominio raíz + www → distribución CloudFront)
   ▼
-CloudFront + ACM (TLS, HTTPS obligatorio, Default Root Object: index.html)
-  │  request firmado vía OAC (SigV4)
+CloudFront  (certificado ACM asociado, terminación TLS, HTTPS obligatorio)
+  │  Request firmado (SigV4) vía Origin Access Control (OAC)
   ▼
-Origin Access Control (OAC)
-  ▼
-S3 (bucket privado, Block Public Access: ON, sin Static Website Hosting)
+S3  (bucket privado, Block Public Access habilitado, sin Static Website Hosting)
 ```
 
-Puntos no negociables de esta arquitectura, ya aprobados:
+No aparecen en este documento AWS Account IDs, ARNs reales, Hosted Zone IDs, Distribution IDs, OAC IDs, Certificate IDs ni el nombre real del bucket — todos los identificadores de abajo son placeholders genéricos.
 
-- **S3 privado**, nunca accesible directamente desde Internet. Un intento de acceso directo (`https://<bucket>.s3.amazonaws.com/index.html` o la URL del bucket) debe resultar en **403 Access Denied**.
-- **CloudFront es el único canal público** hacia el contenido.
-- **OAC, no OAI** (OAI es legacy, no se usa).
-- **ACM obligatoriamente en us-east-1** para el certificado que usa CloudFront, sin importar la región del bucket S3 (requisito técnico no negociable de CloudFront).
-- **Sin WAF** en este MVP.
-- **Sin API Gateway, Lambda, backend, base de datos ni autenticación** — la landing es 100% estática.
-- **Sin contenedores.**
-- **Sin IaC** en el primer deployment (Terraform/CDK/CloudFormation quedan para una fase posterior, no definida todavía).
+## Cómo se desplegó
 
-## 4. Checklist de configuración por servicio
+- Ejecutado **mediante AWS CLI**, no mediante AWS Console — decisión deliberada (ver [docs/architecture-decisions.md](./docs/architecture-decisions.md#9-no-iac-for-the-first-deployment) y [docs/deployment.md](./docs/deployment.md)).
+- Ejecutado usando un **IAM role dedicado de mínimo privilegio**, asumido mediante un profile de AWS CLI separado — nunca con la identidad administradora de amplio acceso usada en la exploración inicial de la cuenta (ver [docs/architecture-decisions.md](./docs/architecture-decisions.md#12-dedicated-least-privilege-iam-role-for-deployment)).
+- Cada paso de creación de recursos (registro de dominio, IAM role/policy, certificado ACM, bucket S3, distribución CloudFront, registros Route 53) fue un **approval gate humano explícito** — nada se creó automáticamente sin revisión previa.
+- **Sin Infrastructure as Code** (Terraform/CDK/CloudFormation) en este primer deployment — decisión deliberada para construir comprensión práctica de cada recurso antes de automatizarlo.
 
-### 4.1 S3
+## Build
 
-- [ ] Crear bucket S3 (general purpose), nombre único pendiente de decisión humana (ver sección 7).
-- [ ] **Block Public Access: ON** (las 4 opciones activadas).
-- [ ] **Static Website Hosting: deshabilitado** (nunca activarlo; activarlo haría el bucket servible públicamente por su propia URL, lo cual contradice la arquitectura aprobada).
-- [ ] Encryption at rest: **SSE-S3**.
-- [ ] Versioning: opcional, recomendado para poder revertir un deployment.
-- [ ] Bucket policy: solo permite `s3:GetObject` al *service principal* `cloudfront.amazonaws.com`, condicionado a que `AWS:SourceArn` coincida con el ARN de la distribución CloudFront específica (no un wildcard, no "cualquier CloudFront"). Plantilla (del design.md aprobado, con placeholders a reemplazar cuando existan los recursos reales):
+```bash
+npm run type-check   # tsc -b
+npm run lint          # oxlint
+npm run build         # tsc -b && vite build → dist/
+```
+
+`dist/` contiene salida estática autocontenida: `index.html` y `favicon.svg` sin hash de contenido, y assets con hash inmutables bajo `assets/` (`*.css`, `*.js` — Vite incrusta un hash de contenido en el nombre de archivo). Sin backend, sin server-side rendering, sin secretos de build.
+
+## S3
+
+- Bucket privado, general purpose, creado vía AWS CLI.
+- **Block Public Access habilitado en las 4 opciones.**
+- **Static Website Hosting nunca habilitado.**
+- Encryption at rest: SSE-S3.
+- Recibe únicamente el contenido de `dist/`, subido con metadata `Cache-Control` diferenciada por grupo de archivo (ver abajo).
+
+## Origin Access Control (OAC)
+
+- Creado con signing behavior "Sign requests (always)" y firma SigV4, origin type S3.
+- OAI (legacy) nunca se usó.
+
+## CloudFront
+
+- Distribución creada con el bucket S3 como origin, acceso al origin vía el OAC anterior.
+- **Default Root Object**: `index.html`.
+- **Viewer protocol policy**: Redirect HTTP to HTTPS.
+- **TLS mínimo**: 1.2.
+- **Alternate domain names**: el dominio raíz y `www`.
+- **Certificado ACM** (abajo) asociado para ambos.
+- Compresión habilitada.
+
+## ACM
+
+- Certificado público solicitado en **us-east-1** (requisito no negociable de CloudFront para cualquier certificado de dominio custom, sin importar la región de los demás recursos).
+- Cubre el dominio raíz y `www`.
+- Validado vía DNS (registros CNAME temporales en Route 53).
+- Estado: **Issued**. Renovación automática por AWS.
+
+## Route 53
+
+- Hosted zone pública para el dominio.
+- **Registros Alias** (no CNAME) para el dominio raíz y `www`, apuntando a la distribución CloudFront — Alias es obligatorio en el apex de la zona, donde un CNAME plano no está permitido por el spec de DNS.
+- Dominio registrado con **WHOIS privacy protection** y **transfer lock** habilitados.
+
+## Bucket policy
+
+Otorga `s3:GetObject` únicamente al service principal `cloudfront.amazonaws.com`, condicionado a que `AWS:SourceArn` coincida con esta distribución específica:
 
 ```json
 {
@@ -89,7 +89,7 @@ Puntos no negociables de esta arquitectura, ya aprobados:
       "Effect": "Allow",
       "Principal": { "Service": "cloudfront.amazonaws.com" },
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::<nombre-bucket>/*",
+      "Resource": "arn:aws:s3:::<bucket-name>/*",
       "Condition": {
         "StringEquals": {
           "AWS:SourceArn": "arn:aws:cloudfront::<account-id>:distribution/<distribution-id>"
@@ -100,111 +100,47 @@ Puntos no negociables de esta arquitectura, ya aprobados:
 }
 ```
 
-- [ ] Subir el contenido de `dist/` al bucket (manual, vía AWS Console, en el primer deployment).
-- [ ] Verificar que el acceso directo al bucket o a sus objetos devuelve **403 Access Denied**.
+Sin `Principal: "*"`. Ninguna otra distribución o cuenta puede satisfacer la condición.
 
-### 4.2 CloudFront
+## Estrategia de caché
 
-- [ ] Crear distribución con origin = el bucket S3 anterior.
-- [ ] Origin access: **Origin Access Control (OAC)**, signing behavior "Sign requests (always)".
-- [ ] **Default Root Object: `index.html`**.
-- [ ] Viewer protocol policy: **Redirect HTTP to HTTPS** (HTTPS obligatorio).
-- [ ] TLS mínimo: 1.2.
-- [ ] Allowed HTTP methods: GET, HEAD, OPTIONS (sitio estático, sin escritura).
-- [ ] Compresión automática (Gzip/Brotli): habilitada.
-- [ ] Alternate domain names (CNAMEs): dominio(s) definitivo(s) — **pendiente**, ver sección 7.
-- [ ] Certificado SSL: el de ACM (sección 4.3), **obligatoriamente en us-east-1**.
-- [ ] Cache behaviors: ver sección 6 (estrategia de caché).
-- [ ] Sin WAF asociado (fuera de alcance del MVP).
-
-### 4.3 ACM (AWS Certificate Manager)
-
-- [ ] Solicitar certificado en **us-east-1** (no la región del bucket; CloudFront exige específicamente us-east-1 para certificados custom-domain).
-- [ ] Domain names: el dominio definitivo y su variante `www` si aplica — **pendiente**, ver sección 7.
-- [ ] Validation method: **DNS validation** (requiere Route 53 ya configurado o acceso al DNS del dominio).
-- [ ] Esperar a que el certificado pase a estado `Issued` antes de asociarlo a CloudFront.
-- [ ] Renovación: automática, gestionada por AWS, sin acción manual recurrente.
-
-### 4.4 Route 53
-
-- [ ] Hosted zone para el dominio definitivo — **pendiente**, ver sección 7.
-- [ ] Registro **Alias** (tipo A), no CNAME, apuntando a la distribución CloudFront (obligatorio para apex domain, ej. `dominio.com` sin `www`).
-- [ ] Registro Alias equivalente para `www.dominio.com` si se decide soportarlo.
-- [ ] CNAMEs temporales de validación de ACM, mientras el certificado está pendiente.
-- [ ] DNSSEC: opcional, solo si el TLD lo soporta.
-- [ ] Health checks: no necesarios (sitio estático simple, sin failover entre orígenes).
-
-## 5. HTTPS obligatorio
-
-- CloudFront configurado con **Redirect HTTP to HTTPS** (ningún tráfico HTTP plano se sirve sin redirección).
-- TLS 1.2 como mínimo soportado.
-- El certificado proviene de ACM (sección 4.3); sin él, CloudFront no puede servir el dominio custom por HTTPS.
-
-## 6. Estrategia de caché
-
-Basada en el contenido real de `dist/` (sección 2): los dos archivos con hash (`assets/index-*.css`, `assets/index-*.js`) son inmutables por construcción (Vite genera un hash nuevo si el contenido cambia); `index.html` y `favicon.svg` no tienen hash y deben revalidarse.
-
-| Archivo | Cache-Control sugerido | Razón |
+| Archivo | Cache-Control | Razón |
 |---|---|---|
-| `assets/index-<hash>.css`, `assets/index-<hash>.js` | `max-age=31536000, immutable` (1 año) | El nombre cambia si el contenido cambia; cachear agresivamente es seguro, un deploy nuevo nunca sobreescribe una URL ya cacheada |
-| `index.html` | `max-age=0, must-revalidate` | Es el único archivo que referencia los assets con hash; debe sedir siempre la versión más reciente para no apuntar a assets viejos |
-| `favicon.svg` | `max-age=86400` (1 día) | Cambia con poca frecuencia; no lleva hash, pero no es crítico para la actualidad del contenido |
+| `assets/*.css`, `assets/*.js` (con hash de contenido) | `public, max-age=31536000, immutable` | El nombre cambia si el contenido cambia — cachear agresivamente es seguro indefinidamente. |
+| `index.html` | `public, max-age=0, must-revalidate` | Es el único archivo que referencia los nombres de assets con hash — debe revalidarse siempre para no apuntar a assets viejos. |
+| `favicon.svg` | `public, max-age=86400` | Cambia con poca frecuencia; no lleva hash, así que un tiempo de vida acotado evita staleness sin exigir revalidación en cada request. |
 
-Reglas de invalidación de CloudFront:
-- Los assets con hash **normalmente no requieren invalidación** — un deploy nuevo genera nombres nuevos, así que la versión vieja en caché simplemente deja de referenciarse.
-- `index.html` puede invalidarse puntualmente (`/index.html`) cuando se necesite forzar que CloudFront vuelva a S3 antes de que expire su TTL.
-- **Invalidar `/*` no es práctica normal.** Se reserva para casos excepcionales (ej. un cambio estructural mayor), nunca como parte del flujo rutinario de deployment.
-- Costo de invalidación: las primeras 1000 rutas invalidadas por mes son gratis; después, USD 0.005 por ruta (cifra de referencia del design.md aprobado, no verificada con AWS Pricing en esta sesión — ver sección 8 sobre costos).
+**Invalidaciones**: el IAM role usado en este primer deployment **no** incluye `cloudfront:CreateInvalidation` — la invalidación se excluyó deliberadamente de la policy inicial de mínimo privilegio, y el primer deployment no la usó. Como `index.html` se sirve con `max-age=0, must-revalidate`, CloudFront ya revalida contra S3 en cada request, lo cual cubre actualizaciones de contenido rutinarias sin necesitar invalidación. Una invalidación completa `/*` no forma parte de la operación normal de este deployment; si en el futuro se necesitara una invalidación puntual excepcional, requeriría revisar y otorgar ese permiso explícitamente primero, no asumir que ya está disponible.
 
-## 7. Decisiones que requieren intervención humana
+## HTTPS / TLS
 
-Ninguna de estas se decidió ni se asumió en esta sesión. Son bloqueantes para pasar de "checklist" a "ejecución":
+- Las requests HTTP se redirigen a HTTPS en el edge de CloudFront — verificado: `http://<dominio>` → `301` → `https://<dominio>`.
+- Certificado TLS verificado como válido para el dominio raíz y para `www`.
 
-1. **Nombre de dominio definitivo** — no existe todavía. Bloquea: ACM (domain names), CloudFront (alternate domain names / CNAMEs), Route 53 (hosted zone y registros Alias), y toda la metadata SEO dependiente de URL (sección 9).
-2. **Nombre del bucket S3** — los nombres de bucket son globalmente únicos en AWS; debe elegirse y confirmarse al momento de crear el recurso, no antes.
-3. **Región del bucket S3** — design.md sugiere `us-east-1` como opción por defecto, pero es una decisión abierta, no una obligación (a diferencia de ACM, que sí debe estar en us-east-1 por requisito técnico de CloudFront).
-4. **Cuenta AWS y región de facturación** — no se asumió ninguna cuenta ni configuración de facturación existente.
-5. **Decisión de incluir o no `www`** como variante del dominio (afecta ACM, CloudFront CNAMEs y Route 53).
-6. **Aprobación explícita de producción** — Requirement del cost gate (sección 8) y aprobación humana explícita antes de cualquier deployment real, independientemente de que este documento ya esté listo.
+## Validaciones realizadas
 
-## 8. Costos — pendiente, cost gate requerido
+- Request directo al endpoint propio del bucket S3 → **`403` (Access Denied)**, confirma que el bucket es inalcanzable salvo a través de CloudFront.
+- Request al dominio de la distribución CloudFront → **`200`**.
+- Request al dominio de producción (raíz y `www`) → **`200`**.
+- Requests a los assets CSS/JS con hash → **`200`**, servidos con el `Cache-Control` esperado.
+- `index.html` servido con `Cache-Control: public, max-age=0, must-revalidate`, confirmado vía headers de respuesta.
 
-No se estimó ningún costo en este documento. Motivo: esta sesión no tiene acceso a AWS Pricing MCP Server ni a ninguna fuente de precios AWS en vivo, y la instrucción explícita de esta task es no inventar precios.
+## Resumen de seguridad
 
-Antes de cualquier recomendación o ejecución de deployment a producción, corresponde ejecutar el **cost gate**:
+- IAM: role dedicado de mínimo privilegio, asumido vía un profile de CLI separado. Sin `s3:PutObjectAcl`. Sin permisos IAM otorgados al role mismo (no puede crear/modificar/escalar policies IAM, incluida la suya). Las acciones de creación de recursos de CloudFront usan `Resource: "*"` únicamente donde el servicio no soporta resource-level permissions para esa acción — nunca una ampliación deliberada. Ningún paso posterior a la creación del role usó permisos de administrador o a nivel de cuenta.
+- Sin WAF en este MVP (ver [docs/architecture-decisions.md](./docs/architecture-decisions.md#6-no-waf-in-the-mvp)).
+- Modelo de seguridad completo en [docs/security.md](./docs/security.md).
 
-- Región AWS a confirmar (ver sección 7).
-- Servicios incluidos: S3 (almacenamiento + requests), CloudFront (data transfer out + requests + invalidaciones), Route 53 (hosted zone + queries), ACM (gratuito).
-- Escenarios obligatorios: Low / Expected / High, cada uno con sus propios supuestos de workload (visitas/mes, GB transferidos/mes, requests/mes).
-- Precios unitarios actuales, obtenidos de AWS Pricing MCP Server cuando esté disponible — no de memoria.
-- Costo bruto on-demand como cifra principal de planeación; Free Tier/créditos solo como nota aparte, nunca como justificación de la arquitectura.
-- Identificación del mayor driver de costo (previsiblemente CloudFront data transfer out, según el análisis cualitativo de design.md, pero sin cifras reales todavía).
-- Aprobación humana explícita de la estimación antes de desplegar a producción.
+## Costo
 
-Esto está fuera del alcance de Task 18 (que es documental) y se deja explícitamente pendiente para la fase correspondiente (PHASE 10, bloqueada).
+Resumen cualitativo de costo en la sección [Estimated Cost](./README.md#estimated-cost) del README — no se duplica aquí para evitar que las cifras queden desincronizadas entre documentos.
 
-## 9. Metadata SEO pendiente de dominio
+## Consideraciones futuras
 
-Documentado también en `index.html` desde Task 15: no se agregó `canonical`, `og:url` ni `og:image` porque dependen de una URL de producción que todavía no existe. Quedan pendientes para cuando el dominio definitivo (sección 7, punto 1) esté aprobado:
+- Infrastructure as Code (Terraform/CDK) una vez que el proceso manual esté bien comprendido (ver decisión #9).
+- Una CloudFront Function para canonicalizar entre dominio raíz y `www`, si llegara a ser necesario (ver decisión #10) — no implementada; ambos hosts sirven directamente hoy.
+- Otorgar `cloudfront:CreateInvalidation` al role de deployment, solo si surge una necesidad operativa real — no otorgado hoy.
 
-- `<link rel="canonical" href="https://<dominio-definitivo>/">`
-- `<meta property="og:url" content="https://<dominio-definitivo>/">`
-- `<meta property="og:image" content="https://<dominio-definitivo>/<ruta-imagen>">` — además requiere que se apruebe y genere una imagen social, lo cual tampoco existe todavía; no es solo un tema de URL.
+---
 
-## 10. Seguridad — resumen de restricciones aplicadas a este checklist
-
-- Ninguna credencial AWS, access key o secreto se incluye en este documento, en el código fuente, ni se agregó a ningún archivo del repositorio.
-- El deployment (cuando se ejecute) debe usar credenciales de usuario/rol con **mínimo privilegio**:
-  - `s3:PutObject`, `s3:ListBucket` sobre el bucket específico.
-  - `cloudfront:CreateInvalidation` sobre la distribución específica.
-  - **No** `s3:PutObjectAcl` (los objetos no necesitan ACLs individuales; el acceso se controla con Block Public Access + bucket policy + OAC, no con ACLs por objeto).
-  - Sin permisos administrativos amplios "por si acaso".
-- S3 permanece inaccesible directamente desde Internet; CloudFront es el único canal público.
-- Sin WAF en este MVP (decisión ya aprobada, no una omisión).
-
-## 11. Estado de esta task
-
-- No se creó ningún recurso AWS.
-- No se ejecutó ningún comando de AWS CLI.
-- No se realizó ningún deploy.
-- Este documento es preparación/documentación únicamente, consistente con el alcance de PHASE 9 y con el bloqueo explícito de PHASE 10 (Production Deployment) hasta que se complete el cost gate y exista aprobación humana explícita.
+Este documento reemplaza una versión anterior, previa al deployment, que describía un checklist todavía no ejecutado. Ese checklist ya se ejecutó por completo; este documento ahora refleja el resultado real y validado.

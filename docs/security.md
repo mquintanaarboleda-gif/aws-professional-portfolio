@@ -54,7 +54,11 @@ names appear anywhere in this repository.
   - S3 object-level actions scoped to the specific bucket (no
     `s3:PutObjectAcl` — object access is governed entirely by Block Public
     Access, the bucket policy and OAC, never by per-object ACLs).
-  - CloudFront invalidation scoped to the specific distribution.
+  - No `cloudfront:CreateInvalidation` granted — invalidation was
+    deliberately excluded from the initial least-privilege policy and
+    wasn't used in the first deployment (`index.html`'s own `max-age=0,
+    must-revalidate` already covers routine content updates; see
+    [deployment.md](./deployment.md#cache-control-strategy)).
   - CloudFront resource-creation actions use `Resource: "*"` only where the
     service genuinely doesn't support resource-level permissions for that
     action (an AWS/IAM limitation, not a deliberate broadening); everything

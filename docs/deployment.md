@@ -50,10 +50,17 @@ document summarizes the order of operations and the caching strategy.
 | `index.html` | `max-age=0, must-revalidate` | It's the only file that references the hashed asset names; it must always be revalidated so it never points at assets from a previous deploy. |
 | `favicon.svg` | short/medium cache (not content-hashed) | Changes rarely, but isn't critical path for content freshness. |
 
-CloudFront invalidation rules follow the same logic: hashed assets normally
-don't need invalidation (a new deploy produces new filenames), `index.html`
-can be invalidated individually when needed, and a full `/*` invalidation is
-reserved for exceptional cases rather than routine deploys.
+**Invalidation is not part of routine deployment here.** The deployment
+role doesn't hold `cloudfront:CreateInvalidation` — it was deliberately left
+out of the least-privilege policy, and the first deployment didn't need it.
+Hashed assets never need invalidation (a new deploy produces new
+filenames), and `index.html`'s own `max-age=0, must-revalidate` already
+forces CloudFront to revalidate against S3 on every request, which covers
+routine content updates on its own. A one-off invalidation remains a
+possible exceptional measure in the future (e.g. a major structural
+change), but it isn't routine, and using it would require explicitly
+reviewing and granting that permission first — it isn't assumed to already
+be available.
 
 ## Build process
 
@@ -64,6 +71,8 @@ HTML/CSS/JS and static assets.
 
 ## Updates
 
-Subsequent deploys repeat steps 1 and 8–10 only: build, sync to S3 with the
-same Cache-Control metadata, invalidate `index.html` if its content changed,
-update DNS only if the architecture itself changes (it normally doesn't).
+Subsequent deploys repeat steps 1 and 8 only: build, then sync to S3 with
+the same Cache-Control metadata. No invalidation step is needed —
+`index.html`'s `must-revalidate` cache behavior already guarantees
+CloudFront picks up the new content on the next request. DNS (step 9) only
+changes if the architecture itself changes, which it normally doesn't.

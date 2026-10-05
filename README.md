@@ -76,20 +76,19 @@ frontend bundle — there's nothing to authenticate against. Full detail in
 Content-hashed assets (`assets/*.js`, `*.css`) get a one-year immutable
 cache, since a new deploy always produces new filenames; `index.html` gets a
 short cache with mandatory revalidation, since it's the file that references
-those hashed assets. Full table and invalidation rules in
-[docs/deployment.md](./docs/deployment.md).
+those hashed assets — which also means no routine CloudFront invalidation is
+needed. Full table in [docs/deployment.md](./docs/deployment.md).
 
 ## Estimated Cost
 
 This is a low-traffic static site on CloudFront + S3 + Route 53 + ACM — on
 AWS's on-demand pricing, this profile sits in the low-cost / Free-Tier-and-PAYG
-range for CloudFront and S3, with Route 53 contributing a hosted zone fee and
-the domain its annual registration cost (both effectively ~$22/year
-prorated). ACM certificates are free. A full cost gate — unit prices,
-Low/Expected/High usage scenarios, and major cost drivers — is required
-before any production deployment decision and, where already produced, lives
-in [`AWS_DEPLOYMENT.md`](./AWS_DEPLOYMENT.md); no new cost figures are
-invented in this README.
+range for CloudFront and S3, with Route 53 contributing a fixed hosted zone
+fee and the domain its annual registration cost (both effectively ~$22/year
+prorated). ACM certificates are free. No new cost figures are invented
+beyond this qualitative range; a full line-item cost breakdown (unit
+prices, Low/Expected/High usage scenarios) was out of scope for this
+public-facing summary.
 
 ## Built with Kiro
 
