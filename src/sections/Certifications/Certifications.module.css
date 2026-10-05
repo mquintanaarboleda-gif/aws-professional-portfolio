@@ -1,0 +1,83 @@
+.certifications {
+  padding-block: var(--spacing-lg);
+  background-color: var(--color-surface);
+}
+
+.group {
+  margin-top: var(--spacing-lg);
+}
+
+.group:first-of-type {
+  /* First group has no own h3 (the section h2 already states
+     "Certificaciones"), so it sits directly below it with less gap. */
+  margin-top: var(--spacing-sm);
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin-top: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.certGrid,
+.devGrid,
+.eduGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .devGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .certGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .eduGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm);
+  background-color: var(--color-background);
+}
+
+.meta {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.status {
+  display: inline-block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-left: var(--spacing-xs);
+}
+
+.foundationList {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  padding: 0;
+  margin-top: var(--spacing-sm);
+}
+
+.foundationList li {
+  font-size: 0.875rem;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.6rem;
+}

@@ -1,0 +1,44 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Environment variables / secrets
+.env
+.env.*
+
+# Local IAM/deployment artifacts (policy JSON drafts), never versioned
+.aws-deploy/
+
+# Portfolio preparation workflow artifacts, never versioned
+.portfolio-prep/
+
+# Internal content source (duplicates data already public in src/content/es.ts;
+# not published in this public repository)
+content/profile-source.md
+
+# Spec workflow artifacts (implementation/review notes from Kiro workflows)
+.kiro/specs/professional-landing-page/.agents/
+.kiro/specs/professional-landing-page/.task13/
+.kiro/specs/professional-landing-page/.task14/
+.kiro/specs/professional-landing-page/visual-refinement-*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

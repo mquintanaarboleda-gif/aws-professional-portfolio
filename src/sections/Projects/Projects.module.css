@@ -1,0 +1,83 @@
+.projects {
+  padding-block: var(--spacing-lg);
+}
+
+.list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--spacing-xs);
+  border: 1px solid currentColor;
+}
+
+.portfolio {
+  color: var(--color-accent);
+}
+
+.professional {
+  color: var(--color-primary);
+}
+
+.focus {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  padding: 0;
+  margin-top: var(--spacing-xs);
+}
+
+.focus li {
+  font-size: 0.8rem;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-sm);
+  padding: 0.15rem 0.5rem;
+}
+
+.demonstrates {
+  margin-top: var(--spacing-xs);
+}
+
+.note {
+  margin-top: var(--spacing-xs);
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.repoLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 600;
+  margin-top: var(--spacing-xs);
+  padding-block: var(--spacing-xs);
+  min-height: 44px;
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-accent);
+}
+
+@media (min-width: 768px) {
+  .list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

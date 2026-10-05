@@ -1,0 +1,78 @@
+.bar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-background);
+  padding-inline: var(--container-padding-inline);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  padding-block: var(--spacing-xs);
+}
+
+.brandName {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.brandRole {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.nav {
+  width: 100%;
+}
+
+.list {
+  display: flex;
+  list-style: none;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) 0;
+  margin: 0;
+  overflow-x: auto;
+}
+
+.list a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--spacing-xs) 0;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--color-text);
+}
+
+.list a:hover {
+  color: var(--color-accent);
+}
+
+/* Tablet and up: no need for horizontal scroll affordance. flex-wrap
+   guards against horizontal page overflow if all items don't fit on one
+   row at narrower tablet widths; it has no visual effect when they do. */
+@media (min-width: 768px) {
+  .list {
+    overflow-x: visible;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/* Desktop: brand left, nav right, single row. */
+@media (min-width: 1024px) {
+  .nav {
+    width: auto;
+  }
+
+  .list {
+    justify-content: flex-end;
+  }
+}

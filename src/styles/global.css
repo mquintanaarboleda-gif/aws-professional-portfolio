@@ -1,0 +1,154 @@
+/*
+ * Global styles: minimal reset, base typography, structural design tokens
+ * and truly global rules (focus visibility, base links).
+ *
+ * Scope (per design.md / tasks.md Task 7):
+ * - CSS reset mínimo
+ * - Tipografía base (system fonts, no external font services)
+ * - Design tokens: spacing scale, documented breakpoints, color/typography
+ *   structure
+ * - Layout/container foundation (reusable utility class, no page layouts)
+ * - :focus-visible styles for keyboard navigation
+ *
+ * NOT in scope here: component/section-specific styles, final branding,
+ * final color palette, final fonts. Those are defined once visual
+ * direction is approved (see sections' own CSS Modules).
+ */
+
+:root {
+  /*
+   * Breakpoints (documented reference only; CSS custom properties cannot
+   * be used inside @media queries, so these are informative and the
+   * literal values below must match them):
+   * Mobile:  < 768px
+   * Tablet:  768px - 1023px
+   * Desktop: >= 1024px
+   */
+
+  /* Colors — neutral, professional base. Final branding/palette pending. */
+  --color-text: #1a1a1a;
+  --color-text-muted: #4d4d4d;
+  --color-background: #ffffff;
+  --color-surface: #f5f5f5;
+  --color-border: #d9d9d9;
+  --color-primary: #1f2937;
+  --color-accent: #2563eb;
+  --color-focus: #2563eb;
+
+  /* Typography — system font stacks, no external font loading. */
+  --font-heading: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+  --font-body: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+  --font-size-base: 1rem;
+  --line-height-base: 1.6;
+
+  /* Spacing scale */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 2rem;
+  --spacing-lg: 4rem;
+  --spacing-xl: 6rem;
+
+  /* Layout */
+  --container-max-width: 72rem;
+  --container-padding-inline: var(--spacing-sm);
+
+  /* Structural radii, reused across 2+ sections (cards, chips, buttons). */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+}
+
+/* Minimal reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+img,
+picture,
+video,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* Base typography and global rules */
+html {
+  line-height: var(--line-height-base);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background-color: var(--color-background);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  line-height: 1.25;
+}
+
+a {
+  color: var(--color-accent);
+}
+
+/* Layout/container foundation. Section-specific layouts live in their own
+   CSS Modules; this utility only centers content and applies the shared
+   inline padding/max-width. */
+.container {
+  width: 100%;
+  max-width: var(--container-max-width);
+  margin-inline: auto;
+  padding-inline: var(--container-padding-inline);
+}
+
+/* Keyboard-navigation focus visibility (global, per Requirement 15) */
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Skip link: first focusable element in the document. Visually hidden by
+   default (moved off-canvas, not display:none, so it stays reachable by
+   assistive technology) and revealed only on :focus-visible. CSS-only, no
+   JS, no new dependency. Lets keyboard/screen-reader users bypass the
+   7-item primary navigation and jump straight to #main-content. */
+.skip-link {
+  position: absolute;
+  top: -3rem;
+  left: var(--spacing-sm);
+  background-color: var(--color-primary);
+  color: var(--color-background);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  z-index: 1000;
+}
+
+.skip-link:focus-visible {
+  top: var(--spacing-sm);
+  /* Same non-text contrast fix as Hero's .primaryCta: the global
+     :focus-visible outline (--color-focus, #2563eb) on this element's
+     background-color (--color-primary, #1f2937) measures 2.84:1, under
+     the 3:1 WCAG AA non-text minimum. --color-background (#ffffff)
+     against the same background measures 14.68:1. */
+  outline-color: var(--color-background);
+}
