@@ -5,6 +5,8 @@ const heading = navigationItems.find((item) => item.targetId === 'contact')?.lab
 
 export function Contact() {
   const telHref = `tel:${contactInfo.phone.replace(/\s+/g, '')}`
+  const mailto = (subject: string) =>
+    `mailto:${contactInfo.email}?subject=${encodeURIComponent(subject)}`
 
   return (
     <section id="contact" className={styles.contact}>
@@ -14,6 +16,15 @@ export function Contact() {
             the existing precedent of hardcoded UI microcopy in this
             component (e.g. "Email:", "Teléfono:"). */}
         <p className={styles.lead}>Hablemos</p>
+        <div className={styles.inquiries}>
+          {[contactInfo.inquiries.services, contactInfo.inquiries.professional].map((inquiry) => (
+            <div key={inquiry.subject} className={styles.inquiry}>
+              <h3>{inquiry.heading}</h3>
+              <p>{inquiry.description}</p>
+              <a href={mailto(inquiry.subject)}>{inquiry.actionLabel}</a>
+            </div>
+          ))}
+        </div>
         <ul className={styles.channels}>
           <li>
             <span className={styles.label}>Email: </span>

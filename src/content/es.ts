@@ -15,6 +15,7 @@ import type {
   ProfessionalDevelopmentEntry,
   Project,
   Service,
+  ServicesInvitation,
 } from '../types/content'
 
 export const navigationItems: NavigationItem[] = [
@@ -31,12 +32,19 @@ export const heroContent: HeroContent = {
   name: 'Milton Andrés Quintana Arboleda',
   title: 'Solution Architecture | Cloud & Hybrid Infrastructure | Technical Pre-Sales',
   tagline:
-    'Diseño soluciones tecnológicas que conectan problemas de negocio con arquitecturas cloud, híbridas y de integración resilientes, seguras y costo-conscientes. Combino solution design, preventa técnica, conectividad, automatización e inteligencia artificial aplicada para convertir requisitos complejos en decisiones tecnológicas viables.',
+    'Diseño soluciones tecnológicas que conectan problemas de negocio con arquitecturas cloud, híbridas y de integración resilientes, seguras y costo-conscientes.',
+  architectureFlow: {
+    title: 'Enfoque de arquitectura',
+    stages: ['Negocio', 'Requisitos', 'Arquitectura'],
+    outcome: 'Decisiones justificadas',
+    description:
+      'Del problema de negocio a los requisitos y la arquitectura; cada decisión se justifica.',
+  },
   cta: {
-    primary: 'Conoce mi experiencia',
+    primary: 'Explorar mi experiencia',
     primaryAction: '#experience',
-    secondary: 'Contáctame',
-    secondaryAction: '#contact',
+    secondary: 'Consultar servicios',
+    secondaryAction: '#services',
   },
 }
 
@@ -400,6 +408,13 @@ export const services: Service[] = [
   },
 ]
 
+export const servicesInvitation: ServicesInvitation = {
+  heading: 'Hablemos de tu necesidad técnica',
+  description:
+    'Si tu empresa necesita revisar una decisión de arquitectura, conectividad o resiliencia, cuéntame el contexto y el problema que busca resolver.',
+  actionLabel: 'Consultar sobre un servicio',
+}
+
 // Email, phone, LinkedIn and GitHub are approved for publication.
 export const contactInfo: ContactInfo = {
   email: 'mquintana.arboleda@gmail.com',
@@ -408,6 +423,22 @@ export const contactInfo: ContactInfo = {
   github: 'https://github.com/mquintanaarboleda-gif',
   location: 'Quito, Ecuador',
   reach: 'Ecuador | Latinoamérica | Oportunidades y colaboraciones remotas',
+  inquiries: {
+    services: {
+      heading: 'Consultas de servicios',
+      description:
+        'Para una consulta de servicios, comparte el contexto de tu empresa y la necesidad técnica.',
+      actionLabel: 'Contactar por servicios',
+      subject: 'Consulta de servicios — Milton Quintana',
+    },
+    professional: {
+      heading: 'Oportunidades profesionales',
+      description:
+        'Para procesos de selección, comparte el rol, la empresa y la modalidad de trabajo.',
+      actionLabel: 'Contactar por una oportunidad profesional',
+      subject: 'Oportunidad profesional — Milton Quintana',
+    },
+  },
 }
 
 // Aggregate typed against ContentStructure so the compiler verifies that
@@ -424,5 +455,6 @@ export const content: ContentStructure = {
   technicalFoundation,
   education,
   services,
+  servicesInvitation,
   contact: contactInfo,
 }

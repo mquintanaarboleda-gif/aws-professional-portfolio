@@ -1,78 +1,124 @@
 .bar {
-  width: 100%;
-  display: flex;
+  max-width: var(--container-max-width);
+  margin-inline: auto;
+  padding: 0 var(--container-padding-inline);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--spacing-xs);
-  border-bottom: 1px solid var(--color-border);
-  background-color: var(--color-background);
-  padding-inline: var(--container-padding-inline);
+  gap: var(--spacing-sm);
+  min-height: 5rem;
 }
 
 .brand {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-  padding-block: var(--spacing-xs);
-}
-
-.brandName {
-  font-weight: 600;
-  font-size: 0.95rem;
+  min-width: 0;
   color: var(--color-text);
 }
 
-.brandRole {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
+.brandName {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.brandName::before {
+  content: '';
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.7rem;
+  vertical-align: middle;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 0.25rem rgba(96, 184, 247, 0.16);
 }
 
 .nav {
-  width: 100%;
+  min-width: 0;
 }
 
 .list {
   display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.8rem;
   list-style: none;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-xs) 0;
-  margin: 0;
-  overflow-x: auto;
+  padding: 0;
 }
 
 .list a {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: var(--spacing-xs) 0;
-  white-space: nowrap;
+  padding: 0.35rem 0.1rem;
+  color: var(--color-text-muted);
   text-decoration: none;
-  color: var(--color-text);
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 .list a:hover {
-  color: var(--color-accent);
+  color: var(--color-text);
 }
 
-/* Tablet and up: no need for horizontal scroll affordance. flex-wrap
-   guards against horizontal page overflow if all items don't fit on one
-   row at narrower tablet widths; it has no visual effect when they do. */
-@media (min-width: 768px) {
+.menuButton {
+  display: none;
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 0.5rem 0.9rem;
+  font: inherit;
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .bar {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding-block: 0.8rem;
+  }
+
   .list {
-    overflow-x: visible;
-    flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start;
   }
 }
 
-/* Desktop: brand left, nav right, single row. */
-@media (min-width: 1024px) {
+@media (max-width: 767px) {
+  .bar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 4.5rem;
+  }
+
+  .brandName {
+    font-size: 0.95rem;
+  }
+
+  .menuButton {
+    display: inline-flex;
+    align-items: center;
+  }
+
   .nav {
-    width: auto;
+    display: none;
+    grid-column: 1 / -1;
+    width: 100%;
+    padding-bottom: var(--spacing-sm);
+  }
+
+  .nav.open {
+    display: block;
   }
 
   .list {
-    justify-content: flex-end;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .list a {
+    width: 100%;
+    border-top: 1px solid var(--color-border);
   }
 }

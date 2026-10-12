@@ -1,4 +1,4 @@
-import { navigationItems, services } from '../../content/es'
+import { contactInfo, navigationItems, services, servicesInvitation } from '../../content/es'
 import styles from './Services.module.css'
 
 const heading = navigationItems.find((item) => item.targetId === 'services')?.label
@@ -16,6 +16,13 @@ export function Services() {
             </li>
           ))}
         </ul>
+        <div className={styles.invitation}>
+          <h3>{servicesInvitation.heading}</h3>
+          <p>{servicesInvitation.description}</p>
+          <a href={`mailto:${contactInfo.email}?subject=${encodeURIComponent(contactInfo.inquiries.services.subject)}`}>
+            {servicesInvitation.actionLabel}
+          </a>
+        </div>
       </div>
     </section>
   )

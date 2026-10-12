@@ -1,35 +1,46 @@
 // Primary navigation, rendered outside <main> (it is not a content section).
-import type { MouseEvent } from 'react'
+import { useRef, useState } from 'react'
+import type { KeyboardEvent } from 'react'
 
 import { heroContent, navigationItems } from '../../content/es'
 import styles from './Navigation.module.css'
 
-// Presentation-only derivation: the brand's secondary line reuses the first
-// clause of the existing heroContent.title (split by " | "), not a new
-// string. heroContent.name is rendered in full.
-const brandRole = heroContent.title.split(' | ')[0]
-
-function handleNavClick(event: MouseEvent<HTMLAnchorElement>, targetId: string) {
-  const target = document.getElementById(targetId)
-  if (!target) {
-    return
-  }
-  event.preventDefault()
-  target.scrollIntoView({ behavior: 'smooth' })
-}
-
 export function Navigation() {
+  const [isOpen, setIsOpen] = useState(false)
+  const menuButton = useRef<HTMLButtonElement>(null)
+
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === 'Escape' && isOpen) {
+      setIsOpen(false)
+      menuButton.current?.focus()
+    }
+  }
+
   return (
-    <div className={styles.bar}>
+    <div className={styles.bar} onKeyDown={handleKeyDown}>
       <p className={styles.brand}>
         <span className={styles.brandName}>{heroContent.name}</span>
-        <span className={styles.brandRole}>{brandRole}</span>
       </p>
-      <nav aria-label="Navegación principal" className={styles.nav}>
+      <button
+        ref={menuButton}
+        type="button"
+        className={styles.menuButton}
+        aria-controls="primary-navigation"
+        aria-expanded={isOpen}
+        aria-label={isOpen ? 'Cerrar menú' : 'Abrir menú'}
+        onClick={() => setIsOpen((open) => !open)}
+      >
+        {isOpen ? 'Cerrar menú' : 'Menú'}
+      </button>
+      <nav
+        id="primary-navigation"
+        aria-label="Navegación principal"
+        className={`${styles.nav} ${isOpen ? styles.open : ''}`}
+      >
         <ul className={styles.list}>
           {navigationItems.map((item) => (
             <li key={item.targetId}>
-              <a href={`#${item.targetId}`} onClick={(event) => handleNavClick(event, item.targetId)}>
+              <a href={`#${item.targetId}`} onClick={() => setIsOpen(false)}>
                 {item.label}
               </a>
             </li>
