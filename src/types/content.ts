@@ -12,6 +12,12 @@ export interface HeroContent {
   name: string
   title: string
   tagline: string
+  architectureFlow: {
+    title: string
+    stages: [string, string, string]
+    outcome: string
+    description: string
+  }
   cta: {
     primary: string
     primaryAction: string // scroll target (#id) or URL
@@ -95,6 +101,19 @@ export interface Service {
   description: string
 }
 
+export interface ServicesInvitation {
+  heading: string
+  description: string
+  actionLabel: string
+}
+
+export interface ContactInquiry {
+  heading: string
+  description: string
+  actionLabel: string
+  subject: string
+}
+
 export interface ContactInfo {
   email: string
   phone: string // display format; approved for publication
@@ -102,6 +121,10 @@ export interface ContactInfo {
   github: string // full URL
   location: string
   reach: string
+  inquiries: {
+    services: ContactInquiry
+    professional: ContactInquiry
+  }
 }
 
 export interface ContentStructure {
@@ -116,5 +139,6 @@ export interface ContentStructure {
   technicalFoundation: string[]
   education: Education[]
   services: Service[]
+  servicesInvitation: ServicesInvitation
   contact: ContactInfo
 }

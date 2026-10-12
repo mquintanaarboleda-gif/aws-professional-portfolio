@@ -1,5 +1,6 @@
 .experience {
-  padding-block: var(--spacing-lg);
+  padding-block: var(--spacing-xl);
+  background: #0b1423;
 }
 
 .entries {
@@ -10,8 +11,8 @@
 }
 
 .entry {
-  border-left: 2px solid var(--color-border);
-  padding-left: var(--spacing-sm);
+  border-left: 2px solid var(--color-accent);
+  padding-left: var(--spacing-md);
 }
 
 .company {
@@ -57,6 +58,7 @@
   font-weight: 600;
   padding-block: var(--spacing-xs);
   min-height: 44px;
+  overflow-wrap: anywhere;
 }
 
 .pastEntry .company,
